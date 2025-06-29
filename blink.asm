@@ -2,20 +2,32 @@
 
 ; Define constants vars yonked form m328Pdef.inc
 ; PORTB maps to pins 8-13.
-.equ	PORTB	= 0x05		;Controls state
-.equ	DDRB	= 0x04		;Make output
-.equ	PINB	= 0x03		;Make input
+.equ	PORTB	= 0x05	;Controls state
+.equ	DDRB	= 0x04	;Make output
+.equ	PINB	= 0x03	;Make input
+
+; Timer 0 control
+.equ	TCCR0A	= 0x25	;Timer/Counter0 Control Register A
+.equ	TCCR0B	= 0x24	;Timer/Counter0 Control Register B
+.equ	GTCCR	= 0x23	;General Timer/Conter Control Register
 
 ; Define the entrypoint and got main function 
 .org 0x0000
+	jmp reset	;Main code loop
+.org 0x0020
+	jmp tim0_ovf	;Interrupt handler of timer0 overflow
+
+reset:
+	sbi DDRB, 5
+	cbi TCCR0B, 0	;Turn on the timer
+	sei		;Enable intterupts
+main:
+	sbi PORTB, 5
 	jmp main
 
-main:
-	sbi DDRB, 5		; Set as output (will add pull-up resistor)
-loop:
-	sbi PINB, 5		; Setting this bit will toggle the output.
-	call wait
-	jmp loop
+tim0_ovf:		; timer0 overlfow intterupt handler
+	sbi PINB, 5
+	reti
 
 ; subrotine to wait "lage" amout of time
 wait: 
